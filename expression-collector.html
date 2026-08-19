@@ -240,24 +240,6 @@ input.meaning-input:focus{outline:none; border-bottom-color:var(--sage-dark);}
   font-size:13.5px;
   line-height:1.7;
 }
-.journal-toolbar{
-  display:flex;
-  gap:8px;
-  margin-bottom:14px;
-}
-.toolbar-btn{
-  flex:1;
-  text-align:center;
-  font-family:'IBM Plex Mono', monospace;
-  font-size:11px;
-  padding:8px 0;
-  border:1.2px solid var(--line);
-  border-radius:3px;
-  background:var(--white);
-  color:var(--ink-soft);
-  cursor:pointer;
-}
-.toolbar-btn:active{background:var(--paper-dark);}
 .entry-swipe-wrap{
   position:relative;
   overflow:hidden;
@@ -647,15 +629,101 @@ const LANG_META = {
 };
 function langMeta(entry){ return LANG_META[entry.lang] || LANG_META.en; }
 
+// ---------- STORAGE BACKEND (Claude artifact storage, with localStorage fallback) ----------
+let storageBackend = null; // 'claude' | 'local' | 'memory'
+
+async function detectStorageBackend(){
+  // Try Claude's artifact storage first (only available inside claude.ai's preview panel)
+  try{
+    if(window.storage && typeof window.storage.set === 'function'){
+      const testKey = '__storage_test__';
+      await window.storage.set(testKey, '1', false);
+      const r = await window.storage.get(testKey, false);
+      if(r && r.value === '1'){
+        await window.storage.delete(testKey, false);
+        storageBackend = 'claude';
+        return;
+      }
+    }
+  }catch(e){ /* fall through */ }
+
+  // Fall back to the browser's own localStorage (works when the file is opened
+  // directly in Safari/Chrome instead of inside Claude's chat).
+  try{
+    const testKey = '__storage_test__';
+    localStorage.setItem(testKey, '1');
+    const ok = localStorage.getItem(testKey) === '1';
+    localStorage.removeItem(testKey);
+    if(ok){ storageBackend = 'local'; return; }
+  }catch(e){ /* fall through */ }
+
+  storageBackend = 'memory';
+}
+
+function lsListKeys(prefix){
+  const keys = [];
+  for(let i=0;i<localStorage.length;i++){
+    const k = localStorage.key(i);
+    if(k && k.startsWith(prefix)) keys.push(k);
+  }
+  return keys;
+}
+
+async function storageSet(key, value){
+  if(storageBackend === 'claude'){
+    return await window.storage.set(key, value, false);
+  }
+  if(storageBackend === 'local'){
+    localStorage.setItem(key, value);
+    return { key, value };
+  }
+  memoryStore[key] = value; // memory-only fallback, lost on refresh
+  return { key, value };
+}
+async function storageGet(key){
+  if(storageBackend === 'claude'){
+    return await window.storage.get(key, false);
+  }
+  if(storageBackend === 'local'){
+    const v = localStorage.getItem(key);
+    if(v === null) throw new Error('not found');
+    return { key, value: v };
+  }
+  if(!(key in memoryStore)) throw new Error('not found');
+  return { key, value: memoryStore[key] };
+}
+async function storageDelete(key){
+  if(storageBackend === 'claude'){
+    return await window.storage.delete(key, false);
+  }
+  if(storageBackend === 'local'){
+    localStorage.removeItem(key);
+    return { key, deleted: true };
+  }
+  delete memoryStore[key];
+  return { key, deleted: true };
+}
+async function storageListKeys(prefix){
+  if(storageBackend === 'claude'){
+    const r = await window.storage.list(prefix, false);
+    return (r && r.keys) ? r.keys : [];
+  }
+  if(storageBackend === 'local'){
+    return lsListKeys(prefix);
+  }
+  return Object.keys(memoryStore).filter(k=>k.startsWith(prefix));
+}
+const memoryStore = {};
+
 // ---------- STORAGE HELPERS ----------
 async function loadEntries(){
+  if(!storageBackend) await detectStorageBackend();
   try{
-    const list = await window.storage.list('entry:', false);
-    const keys = (list && list.keys) ? list.keys : [];
+    const keys = await storageListKeys('entry:');
     const results = [];
     for(const k of keys){
       try{
-        const r = await window.storage.get(k, false);
+        const r = await storageGet(k);
         if(r && r.value) results.push(JSON.parse(r.value));
       }catch(e){ /* skip broken key */ }
     }
@@ -667,11 +735,16 @@ async function loadEntries(){
   }
   state.loading = false;
   render();
+  if(storageBackend === 'local'){
+    showToast('💾 이 브라우저에 저장 중이에요 (기기별로 따로 저장돼요)');
+  } else if(storageBackend === 'memory'){
+    showToast('⚠️ 저장이 지원되지 않는 환경이에요. 자주 내보내기 해주세요');
+  }
 }
 
 async function saveEntry(entry){
   try{
-    const r = await window.storage.set('entry:' + entry.id, JSON.stringify(entry), false);
+    const r = await storageSet('entry:' + entry.id, JSON.stringify(entry));
     if(!r) showToast('⚠️ 저장이 확인되지 않았어요. 내보내기로 백업해두세요');
     return r;
   }catch(e){
@@ -683,7 +756,7 @@ async function saveEntry(entry){
 
 async function deleteEntryStorage(id){
   try{
-    await window.storage.delete('entry:' + id, false);
+    await storageDelete('entry:' + id);
   }catch(e){
     console.error('delete error', e);
     showToast('⚠️ 삭제 반영에 실패했어요');
@@ -870,47 +943,6 @@ async function toggleDetailMemorized(id){
   render();
 }
 
-function exportData(){
-  if(state.entries.length === 0){ showToast('내보낼 표현이 아직 없어요'); return; }
-  const dataStr = JSON.stringify(state.entries, null, 2);
-  const blob = new Blob([dataStr], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  const dateStr = new Date().toISOString().slice(0,10);
-  a.download = `표현채집장_백업_${dateStr}.json`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  showToast('📦 백업 파일을 다운로드했어요');
-}
-
-async function importData(event){
-  const file = event.target.files && event.target.files[0];
-  if(!file) return;
-  try{
-    const text = await file.text();
-    const imported = JSON.parse(text);
-    if(!Array.isArray(imported)) throw new Error('invalid format');
-    let added = 0;
-    for(const item of imported){
-      if(!item || !item.id || !item.text) continue;
-      if(state.entries.find(e=>e.id === item.id)) continue;
-      state.entries.push(item);
-      await saveEntry(item);
-      added++;
-    }
-    state.entries.sort((a,b)=> b.createdAt - a.createdAt);
-    showToast(added > 0 ? `📦 ${added}개 항목을 복원했어요` : '새로 추가된 항목이 없어요');
-    render();
-  }catch(err){
-    console.error('import error', err);
-    showToast('⚠️ 가져오기에 실패했어요. 파일을 확인해주세요');
-  }
-  event.target.value = '';
-}
-
 function openDetail(id){
   state.detailId = id;
   render();
@@ -945,18 +977,10 @@ function renderCapture(){
 
 function renderJournal(){
   const list = state.entries.filter(e => (e.lang||'en') === state.activeLang);
-  const toolbar = `
-    <div class="journal-toolbar">
-      <button class="toolbar-btn" onclick="exportData()">⬇ 백업 내보내기</button>
-      <label class="toolbar-btn import-label">⬆ 복원하기
-        <input type="file" accept="application/json" style="display:none" onchange="importData(event)">
-      </label>
-    </div>
-  `;
   if(list.length === 0){
-    return toolbar + `<div class="journal-empty">아직 채집한 표현이 없어요.<br>‘채집’ 탭에서 첫 표현을 담아보세요 🌱</div>`;
+    return `<div class="journal-empty">아직 채집한 표현이 없어요.<br>‘채집’ 탭에서 첫 표현을 담아보세요 🌱</div>`;
   }
-  return toolbar + list.map(entry => `
+  return list.map(entry => `
     <div class="entry-swipe-wrap">
       <div class="entry-swipe-delete" onclick="event.stopPropagation(); handleDeleteEntry('${entry.id}')">
         <span>🗑</span><span>삭제</span>
