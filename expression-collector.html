@@ -239,17 +239,40 @@ input.meaning-input:focus{outline:none; border-bottom-color:var(--sage-dark);}
   font-size:13.5px;
   line-height:1.7;
 }
+.entry-swipe-wrap{
+  position:relative;
+  overflow:hidden;
+  border-radius:2px;
+  margin-bottom:12px;
+}
+.entry-swipe-delete{
+  position:absolute;
+  top:0; right:0; bottom:0;
+  width:84px;
+  background:var(--rust);
+  color:var(--white);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+  cursor:pointer;
+}
+.entry-swipe-delete span:first-child{font-size:18px;}
+.entry-swipe-delete span:last-child{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:10.5px;
+  letter-spacing:0.03em;
+}
 .entry-card{
   background:var(--card);
   border:1.3px solid var(--ink);
   border-radius:2px;
   padding:14px 14px 12px;
-  margin-bottom:12px;
   cursor:pointer;
   box-shadow:2px 2px 0 var(--line);
-  transition:box-shadow .12s, transform .12s;
+  position:relative;
+  z-index:1;
+  touch-action:pan-y;
+  user-select:none;
+  -webkit-user-select:none;
 }
-.entry-card:active{box-shadow:0 0 0 var(--line); transform:translate(2px,2px);}
 .entry-card-top{display:flex; justify-content:space-between; align-items:flex-start; gap:10px;}
 .entry-text{
   font-family:'Fraunces', serif;
@@ -513,15 +536,40 @@ audio{height:36px; max-width:100%;}
 }
 
 .toast{
-  position:fixed; bottom:76px; left:50%; transform:translateX(-50%);
+  position:fixed; bottom:76px; left:50%; transform:translateX(-50%) scale(0.9);
   background:var(--ink); color:var(--white);
-  padding:9px 18px; border-radius:20px;
-  font-size:12.5px;
+  padding:12px 22px; border-radius:24px;
+  font-size:13.5px;
+  font-weight:600;
+  border:1.5px solid var(--sage-dark);
+  box-shadow:0 6px 16px rgba(38,49,43,0.28);
   z-index:100;
   opacity:0; pointer-events:none;
-  transition:opacity .2s;
+  transition:opacity .18s, transform .18s cubic-bezier(.34,1.56,.64,1);
+  max-width:86%;
+  text-align:center;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
-.toast.show{opacity:1;}
+.toast.show{opacity:1; transform:translateX(-50%) scale(1);}
+
+@keyframes countPulse{
+  0%{transform:scale(1); color:var(--sage-dark);}
+  40%{transform:scale(1.5); color:var(--ochre);}
+  100%{transform:scale(1); color:var(--sage-dark);}
+}
+.entry-count span.pulse{display:inline-block; animation:countPulse .5s ease;}
+
+.save-btn.saved{
+  background:var(--sage-dark);
+  animation:saveBounce .45s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes saveBounce{
+  0%{transform:scale(1);}
+  35%{transform:scale(1.035);}
+  100%{transform:scale(1);}
+}
 </style>
 </head>
 <body>
@@ -626,7 +674,7 @@ function showToast(msg){
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'), 1600);
+  setTimeout(()=>t.classList.remove('show'), 2000);
 }
 function ringsSVG(stage, size){
   size = size || 34;
@@ -715,8 +763,29 @@ async function handleAddEntry(){
   await saveEntry(entry);
   state.draftText = '';
   state.draftMeaning = '';
-  showToast('채집 완료 🌱');
   render();
+
+  const preview = text.length > 26 ? text.slice(0, 26) + '…' : text;
+  showToast(`🌱 “${preview}” 채집 완료!`);
+
+  const btn = document.getElementById('saveBtn');
+  if(btn){
+    const original = '채집장에 담기';
+    btn.textContent = '✓ 채집 완료!';
+    btn.classList.add('saved');
+    btn.disabled = true;
+    setTimeout(()=>{
+      btn.textContent = original;
+      btn.classList.remove('saved');
+      btn.disabled = false;
+    }, 1100);
+  }
+  const countEl = document.getElementById('entryCount');
+  if(countEl){
+    countEl.classList.remove('pulse');
+    void countEl.offsetWidth; // restart animation
+    countEl.classList.add('pulse');
+  }
 }
 
 async function handleDeleteEntry(id){
@@ -779,7 +848,7 @@ function renderCapture(){
       </div>
       <label class="field-label">뜻 (선택)</label>
       <input id="captureMeaning" class="meaning-input" placeholder="한국어 의미를 적어보세요" value="${escapeAttr(state.draftMeaning)}" oninput="state.draftMeaning=this.value">
-      <button class="save-btn" onclick="handleAddEntry()">채집장에 담기</button>
+      <button id="saveBtn" class="save-btn" onclick="handleAddEntry()">채집장에 담기</button>
     </div>
     <div class="hint-box">
       💡 일단 문장만 던져놔도 괜찮아요. 나중에 노트에서 발음을 듣고, 직접 녹음하고, 예문과 뉘앙스를 하나씩 붙여가며 표현을 키워보세요. 언어는 상단 탭에서 바꿀 수 있어요.
@@ -793,19 +862,24 @@ function renderJournal(){
     return `<div class="journal-empty">아직 채집한 표현이 없어요.<br>‘채집’ 탭에서 첫 표현을 담아보세요 🌱</div>`;
   }
   return list.map(entry => `
-    <div class="entry-card" onclick="openDetail('${entry.id}')">
-      <div class="entry-card-top">
-        <div>
-          <div class="entry-text">${escapeHtml(entry.text)}</div>
-          <div class="entry-meta">
-            <span class="lang-pill">${langMeta(entry).flag} ${langMeta(entry).label}</span>
-            <span class="tag-pill">${TYPE_LABELS[entry.type]}</span>
-            <span class="tag-pill">${fmtDate(entry.createdAt)}</span>
-            <span class="tag-pill" style="${entry.memorized ? 'color:var(--sage-dark);border-color:var(--sage-dark);' : 'color:var(--rust);border-color:var(--rust);'}">${entry.memorized ? '✓ 암기' : '미암기'}</span>
+    <div class="entry-swipe-wrap">
+      <div class="entry-swipe-delete" onclick="event.stopPropagation(); handleDeleteEntry('${entry.id}')">
+        <span>🗑</span><span>삭제</span>
+      </div>
+      <div class="entry-card" data-id="${entry.id}">
+        <div class="entry-card-top">
+          <div>
+            <div class="entry-text">${escapeHtml(entry.text)}</div>
+            <div class="entry-meta">
+              <span class="lang-pill">${langMeta(entry).flag} ${langMeta(entry).label}</span>
+              <span class="tag-pill">${TYPE_LABELS[entry.type]}</span>
+              <span class="tag-pill">${fmtDate(entry.createdAt)}</span>
+              <span class="tag-pill" style="${entry.memorized ? 'color:var(--sage-dark);border-color:var(--sage-dark);' : 'color:var(--rust);border-color:var(--rust);'}">${entry.memorized ? '✓ 암기' : '미암기'}</span>
+            </div>
+            ${entry.meaning ? `<div class="entry-meaning">${escapeHtml(entry.meaning)}</div>` : ''}
           </div>
-          ${entry.meaning ? `<div class="entry-meaning">${escapeHtml(entry.meaning)}</div>` : ''}
+          <div class="rings">${ringsSVG(stageOf(entry))}</div>
         </div>
-        <div class="rings">${ringsSVG(stageOf(entry))}</div>
       </div>
     </div>
   `).join('');
@@ -1017,6 +1091,92 @@ document.getElementById('langTabs').addEventListener('click', (e)=>{
   state.wbIndex = 0;
   state.wbFlipped = false;
   render();
+});
+
+// ---------- SWIPE TO DELETE (journal cards) ----------
+let swipe = { el:null, startX:0, startY:0, baseX:0, currentX:0, dragging:false, moved:false, horizontal:false };
+
+function resetSwipes(exceptId){
+  document.querySelectorAll('.entry-card.swiped').forEach(el=>{
+    if(el.dataset.id !== exceptId){
+      el.classList.remove('swiped');
+      el.style.transition = 'transform .2s ease';
+      el.style.transform = 'translateX(0)';
+    }
+  });
+}
+
+const mainViewEl = document.getElementById('mainView');
+
+mainViewEl.addEventListener('pointerdown', (e)=>{
+  if(e.target.closest('.entry-swipe-delete')) return;
+  const card = e.target.closest('.entry-card');
+  if(!card) return;
+  resetSwipes(card.dataset.id);
+  swipe.el = card;
+  swipe.startX = e.clientX;
+  swipe.startY = e.clientY;
+  swipe.baseX = card.classList.contains('swiped') ? -84 : 0;
+  swipe.currentX = swipe.baseX;
+  swipe.dragging = true;
+  swipe.moved = false;
+  swipe.horizontal = false;
+  card.style.transition = 'none';
+});
+
+mainViewEl.addEventListener('pointermove', (e)=>{
+  if(!swipe.dragging || !swipe.el) return;
+  const dx = e.clientX - swipe.startX;
+  const dy = e.clientY - swipe.startY;
+  if(!swipe.horizontal){
+    if(Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+    if(Math.abs(dy) > Math.abs(dx)){
+      swipe.dragging = false;
+      swipe.el = null;
+      return;
+    }
+    swipe.horizontal = true;
+  }
+  swipe.moved = true;
+  const next = Math.min(0, Math.max(swipe.baseX + dx, -96));
+  swipe.currentX = next;
+  swipe.el.style.transform = `translateX(${next}px)`;
+});
+
+function endSwipe(){
+  if(!swipe.el){ swipe.dragging = false; return; }
+  swipe.dragging = false;
+  const card = swipe.el;
+  card.style.transition = 'transform .2s ease';
+  if(swipe.currentX < -40){
+    card.style.transform = 'translateX(-84px)';
+    card.classList.add('swiped');
+  } else {
+    card.style.transform = 'translateX(0)';
+    card.classList.remove('swiped');
+  }
+  swipe.el = null;
+}
+mainViewEl.addEventListener('pointerup', endSwipe);
+mainViewEl.addEventListener('pointercancel', endSwipe);
+
+mainViewEl.addEventListener('click', (e)=>{
+  if(e.target.closest('.entry-swipe-delete')) return;
+  const card = e.target.closest('.entry-card');
+  if(!card) return;
+  if(swipe.moved){ swipe.moved = false; return; }
+  if(card.classList.contains('swiped')){
+    card.classList.remove('swiped');
+    card.style.transition = 'transform .2s ease';
+    card.style.transform = 'translateX(0)';
+    return;
+  }
+  openDetail(card.dataset.id);
+});
+
+document.addEventListener('click', (e)=>{
+  if(e.target.closest('.entry-card') || e.target.closest('.entry-swipe-delete')) return;
+  resetSwipes(null);
 });
 
 // ---------- INIT ----------
