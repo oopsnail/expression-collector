@@ -17,6 +17,8 @@
   --sage-dark:#3E5940;
   --ochre:#C98D2E;
   --rust:#A64B3B;
+  --denim:#3F6284;
+  --plum:#7C4B68;
   --line:#D9D2BB;
   --white:#FFFDF7;
 }
@@ -77,8 +79,9 @@ body{
 /* LANGUAGE LANES */
 .lang-tabs{
   display:flex;
-  gap:5px;
-  padding:10px 16px 0;
+  flex-wrap:wrap;
+  gap:5px 5px;
+  padding:10px 16px 6px;
   background:var(--paper);
 }
 .lang-tab{
@@ -104,6 +107,8 @@ body{
 .lang-tab.active[data-lang="en"]{box-shadow:inset 0 3px 0 0 var(--sage-dark);}
 .lang-tab.active[data-lang="ja"]{box-shadow:inset 0 3px 0 0 var(--rust);}
 .lang-tab.active[data-lang="es"]{box-shadow:inset 0 3px 0 0 var(--ochre);}
+.lang-tab.active[data-lang="zh"]{box-shadow:inset 0 3px 0 0 var(--denim);}
+.lang-tab.active[data-lang="it"]{box-shadow:inset 0 3px 0 0 var(--plum);}
 .lang-tab-strip{
   height:1.5px;
   background:var(--ink);
@@ -589,6 +594,8 @@ audio{height:36px; max-width:100%;}
     <button class="lang-tab" data-lang="en">🇬🇧 영어</button>
     <button class="lang-tab" data-lang="ja">🇯🇵 일본어</button>
     <button class="lang-tab" data-lang="es">🇪🇸 스페인어</button>
+    <button class="lang-tab" data-lang="zh">🇨🇳 중국어</button>
+    <button class="lang-tab" data-lang="it">🇮🇹 이탈리아어</button>
   </nav>
   <div class="lang-tab-strip"></div>
   <main id="mainView"></main>
@@ -626,6 +633,8 @@ const LANG_META = {
   en: { label: '영어', flag: '🇬🇧', code: 'en-US' },
   ja: { label: '일본어', flag: '🇯🇵', code: 'ja-JP' },
   es: { label: '스페인어', flag: '🇪🇸', code: 'es-ES' },
+  zh: { label: '중국어', flag: '🇨🇳', code: 'zh-CN' },
+  it: { label: '이탈리아어', flag: '🇮🇹', code: 'it-IT' },
 };
 function langMeta(entry){ return LANG_META[entry.lang] || LANG_META.en; }
 
@@ -990,7 +999,7 @@ function closeDetail(){
 
 // ---------- RENDER: TABS ----------
 function renderCapture(){
-  const placeholders = { en: "e.g. It's not rocket science.", ja: '例：お疲れ様です', es: 'p.ej. No hay de qué' };
+  const placeholders = { en: "e.g. It's not rocket science.", ja: '例：お疲れ様です', es: 'p.ej. No hay de qué', zh: '例：马马虎虎', it: 'p.es. Non c\'è di che' };
   return `
     <div class="capture-card">
       <label class="field-label">${LANG_META[state.activeLang].flag} ${LANG_META[state.activeLang].label} 표현 채집 중</label>
