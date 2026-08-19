@@ -341,6 +341,9 @@ input.meaning-input:focus{outline:none; border-bottom-color:var(--sage-dark);}
   box-shadow:4px 4px 0 var(--line);
   cursor:pointer;
   position:relative;
+  touch-action:pan-y;
+  user-select:none;
+  -webkit-user-select:none;
 }
 .flashcard .tag-pill{position:absolute; top:12px; left:12px;}
 .fc-front{
@@ -1083,7 +1086,7 @@ function renderWordbook(){
       <div class="wb-filter">${wbFilterSelect()} ${wbStatusSelect()}</div>
       ${statsLine}
     </div>
-    <div class="flashcard" onclick="toggleFlip()">
+    <div class="flashcard">
       <span class="tag-pill" style="color:${langMeta(entry).color}; border-color:${langMeta(entry).color};">${langMeta(entry).label} · ${TYPE_LABELS[entry.type]}</span>
       <span class="memorized-pill ${entry.memorized ? 'yes' : 'no'}">${entry.memorized ? '✓ 암기함' : '미암기'}</span>
       ${state.wbFlipped
@@ -1094,7 +1097,6 @@ function renderWordbook(){
     </div>
     <div class="wb-secondary-row">
       <button class="round-btn" onclick="speak('${escapeAttr(entry.text)}', '${langMeta(entry).code}')" title="발음 듣기">🔊</button>
-      <button class="round-btn" onclick="wbNext()" title="건너뛰기">⏭</button>
     </div>
     <div class="verdict-bar">
       <button class="verdict-half not-yet" onclick="markMemorized('${entry.id}', false)">
@@ -1134,6 +1136,12 @@ function toggleFlip(){ state.wbFlipped = !state.wbFlipped; render(); }
 function wbNext(){
   const list = getWordbookList();
   state.wbIndex = (state.wbIndex + 1) % Math.max(list.length,1);
+  state.wbFlipped = false;
+  render();
+}
+function wbPrev(){
+  const list = getWordbookList();
+  state.wbIndex = (state.wbIndex - 1 + list.length) % Math.max(list.length,1);
   state.wbFlipped = false;
   render();
 }
@@ -1266,8 +1274,8 @@ document.getElementById('langTabs').addEventListener('click', (e)=>{
   render();
 });
 
-// ---------- SWIPE TO DELETE (journal cards) ----------
-let swipe = { el:null, startX:0, startY:0, baseX:0, currentX:0, dragging:false, moved:false, horizontal:false };
+// ---------- GESTURES: swipe-to-delete (journal) + swipe-to-navigate (wordbook) ----------
+let gesture = { type:null, el:null, startX:0, startY:0, baseX:0, currentX:0, dragging:false, moved:false, horizontal:false };
 
 function resetSwipes(exceptId){
   document.querySelectorAll('.entry-card.swiped').forEach(el=>{
@@ -1283,68 +1291,115 @@ const mainViewEl = document.getElementById('mainView');
 
 mainViewEl.addEventListener('pointerdown', (e)=>{
   if(e.target.closest('.entry-swipe-delete')) return;
-  const card = e.target.closest('.entry-card');
-  if(!card) return;
-  resetSwipes(card.dataset.id);
-  swipe.el = card;
-  swipe.startX = e.clientX;
-  swipe.startY = e.clientY;
-  swipe.baseX = card.classList.contains('swiped') ? -84 : 0;
-  swipe.currentX = swipe.baseX;
-  swipe.dragging = true;
-  swipe.moved = false;
-  swipe.horizontal = false;
-  card.style.transition = 'none';
+  const entryCard = e.target.closest('.entry-card');
+  const flashcard = e.target.closest('.flashcard');
+  if(entryCard){
+    resetSwipes(entryCard.dataset.id);
+    gesture.type = 'entry';
+    gesture.el = entryCard;
+    gesture.startX = e.clientX;
+    gesture.startY = e.clientY;
+    gesture.baseX = entryCard.classList.contains('swiped') ? -84 : 0;
+    gesture.currentX = gesture.baseX;
+    gesture.dragging = true;
+    gesture.moved = false;
+    gesture.horizontal = false;
+    entryCard.style.transition = 'none';
+  } else if(flashcard){
+    gesture.type = 'flashcard';
+    gesture.el = flashcard;
+    gesture.startX = e.clientX;
+    gesture.startY = e.clientY;
+    gesture.baseX = 0;
+    gesture.currentX = 0;
+    gesture.dragging = true;
+    gesture.moved = false;
+    gesture.horizontal = false;
+    flashcard.style.transition = 'none';
+  }
 });
 
 mainViewEl.addEventListener('pointermove', (e)=>{
-  if(!swipe.dragging || !swipe.el) return;
-  const dx = e.clientX - swipe.startX;
-  const dy = e.clientY - swipe.startY;
-  if(!swipe.horizontal){
+  if(!gesture.dragging || !gesture.el) return;
+  const dx = e.clientX - gesture.startX;
+  const dy = e.clientY - gesture.startY;
+  if(!gesture.horizontal){
     if(Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
     if(Math.abs(dy) > Math.abs(dx)){
-      swipe.dragging = false;
-      swipe.el = null;
+      gesture.dragging = false;
+      gesture.el = null;
       return;
     }
-    swipe.horizontal = true;
+    gesture.horizontal = true;
   }
-  swipe.moved = true;
-  const next = Math.min(0, Math.max(swipe.baseX + dx, -96));
-  swipe.currentX = next;
-  swipe.el.style.transform = `translateX(${next}px)`;
+  gesture.moved = true;
+  if(gesture.type === 'entry'){
+    const next = Math.min(0, Math.max(gesture.baseX + dx, -96));
+    gesture.currentX = next;
+    gesture.el.style.transform = `translateX(${next}px)`;
+  } else if(gesture.type === 'flashcard'){
+    gesture.currentX = dx;
+    gesture.el.style.transform = `translateX(${dx}px) rotate(${(dx/24).toFixed(2)}deg)`;
+    gesture.el.style.opacity = String(Math.max(0.35, 1 - Math.abs(dx)/280));
+  }
 });
 
-function endSwipe(){
-  if(!swipe.el){ swipe.dragging = false; return; }
-  swipe.dragging = false;
-  const card = swipe.el;
-  card.style.transition = 'transform .2s ease';
-  if(swipe.currentX < -40){
-    card.style.transform = 'translateX(-84px)';
-    card.classList.add('swiped');
-  } else {
-    card.style.transform = 'translateX(0)';
-    card.classList.remove('swiped');
+function endGesture(){
+  if(!gesture.el){ gesture.dragging = false; return; }
+  gesture.dragging = false;
+  const el = gesture.el;
+  const type = gesture.type;
+  const currentX = gesture.currentX;
+  gesture.el = null;
+
+  if(type === 'entry'){
+    el.style.transition = 'transform .2s ease';
+    if(currentX < -40){
+      el.style.transform = 'translateX(-84px)';
+      el.classList.add('swiped');
+    } else {
+      el.style.transform = 'translateX(0)';
+      el.classList.remove('swiped');
+    }
+  } else if(type === 'flashcard'){
+    const threshold = 70;
+    el.style.transition = 'transform .2s ease, opacity .2s ease';
+    if(currentX < -threshold){
+      el.style.transform = 'translateX(-340px) rotate(-12deg)';
+      el.style.opacity = '0';
+      setTimeout(wbNext, 150);
+    } else if(currentX > threshold){
+      el.style.transform = 'translateX(340px) rotate(12deg)';
+      el.style.opacity = '0';
+      setTimeout(wbPrev, 150);
+    } else {
+      el.style.transform = 'translateX(0) rotate(0deg)';
+      el.style.opacity = '1';
+    }
   }
-  swipe.el = null;
 }
-mainViewEl.addEventListener('pointerup', endSwipe);
-mainViewEl.addEventListener('pointercancel', endSwipe);
+mainViewEl.addEventListener('pointerup', endGesture);
+mainViewEl.addEventListener('pointercancel', endGesture);
 
 mainViewEl.addEventListener('click', (e)=>{
   if(e.target.closest('.entry-swipe-delete')) return;
-  const card = e.target.closest('.entry-card');
-  if(!card) return;
-  if(swipe.moved){ swipe.moved = false; return; }
-  if(card.classList.contains('swiped')){
-    card.classList.remove('swiped');
-    card.style.transition = 'transform .2s ease';
-    card.style.transform = 'translateX(0)';
+  const entryCard = e.target.closest('.entry-card');
+  if(entryCard){
+    if(gesture.moved){ gesture.moved = false; return; }
+    if(entryCard.classList.contains('swiped')){
+      entryCard.classList.remove('swiped');
+      entryCard.style.transition = 'transform .2s ease';
+      entryCard.style.transform = 'translateX(0)';
+      return;
+    }
+    openDetail(entryCard.dataset.id);
     return;
   }
-  openDetail(card.dataset.id);
+  const flashcard = e.target.closest('.flashcard');
+  if(flashcard){
+    if(gesture.moved){ gesture.moved = false; return; }
+    toggleFlip();
+  }
 });
 
 document.addEventListener('click', (e)=>{
