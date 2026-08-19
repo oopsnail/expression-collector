@@ -79,15 +79,20 @@ body{
 /* LANGUAGE LANES */
 .lang-tabs{
   display:flex;
-  flex-wrap:wrap;
-  gap:5px 5px;
-  padding:10px 16px 6px;
+  gap:5px;
+  padding:10px 16px 0;
   background:var(--paper);
+  overflow-x:auto;
+  scrollbar-width:none;
+  -ms-overflow-style:none;
+  -webkit-overflow-scrolling:touch;
 }
+.lang-tabs::-webkit-scrollbar{display:none;}
 .lang-tab{
   font-family:'IBM Plex Mono', monospace;
   font-size:14px;
   white-space:nowrap;
+  flex-shrink:0;
   padding:8px 13px 7px;
   border:1.3px solid var(--ink);
   border-bottom:none;
@@ -591,11 +596,11 @@ audio{height:36px; max-width:100%;}
     <div class="entry-count">No. <span id="entryCount">000</span></div>
   </header>
   <nav class="lang-tabs" id="langTabs">
-    <button class="lang-tab" data-lang="en">🇬🇧 영어</button>
-    <button class="lang-tab" data-lang="ja">🇯🇵 일본어</button>
-    <button class="lang-tab" data-lang="es">🇪🇸 스페인어</button>
-    <button class="lang-tab" data-lang="zh">🇨🇳 중국어</button>
-    <button class="lang-tab" data-lang="it">🇮🇹 이탈리아어</button>
+    <button class="lang-tab" data-lang="en">영어</button>
+    <button class="lang-tab" data-lang="ja">일본어</button>
+    <button class="lang-tab" data-lang="es">스페인어</button>
+    <button class="lang-tab" data-lang="zh">중국어</button>
+    <button class="lang-tab" data-lang="it">이탈리아어</button>
   </nav>
   <div class="lang-tab-strip"></div>
   <main id="mainView"></main>
@@ -630,11 +635,11 @@ let recChunks = [];
 
 const TYPE_LABELS = { word: '단어', expression: '표현', sentence: '문장' };
 const LANG_META = {
-  en: { label: '영어', flag: '🇬🇧', code: 'en-US' },
-  ja: { label: '일본어', flag: '🇯🇵', code: 'ja-JP' },
-  es: { label: '스페인어', flag: '🇪🇸', code: 'es-ES' },
-  zh: { label: '중국어', flag: '🇨🇳', code: 'zh-CN' },
-  it: { label: '이탈리아어', flag: '🇮🇹', code: 'it-IT' },
+  en: { label: '영어', color: 'var(--sage-dark)', code: 'en-US' },
+  ja: { label: '일본어', color: 'var(--rust)', code: 'ja-JP' },
+  es: { label: '스페인어', color: 'var(--ochre)', code: 'es-ES' },
+  zh: { label: '중국어', color: 'var(--denim)', code: 'zh-CN' },
+  it: { label: '이탈리아어', color: 'var(--plum)', code: 'it-IT' },
 };
 function langMeta(entry){ return LANG_META[entry.lang] || LANG_META.en; }
 
@@ -1002,7 +1007,7 @@ function renderCapture(){
   const placeholders = { en: "e.g. It's not rocket science.", ja: '例：お疲れ様です', es: 'p.ej. No hay de qué', zh: '例：马马虎虎', it: 'p.es. Non c\'è di che' };
   return `
     <div class="capture-card">
-      <label class="field-label">${LANG_META[state.activeLang].flag} ${LANG_META[state.activeLang].label} 표현 채집 중</label>
+      <label class="field-label" style="color:${LANG_META[state.activeLang].color};">${LANG_META[state.activeLang].label} 표현 채집 중</label>
       <textarea id="captureInput" class="main-input" rows="3" placeholder="${placeholders[state.activeLang]}" oninput="state.draftText=this.value">${escapeHtml(state.draftText)}</textarea>
       <div class="type-row">
         ${['word','expression','sentence'].map(t=>`
@@ -1034,7 +1039,7 @@ function renderJournal(){
           <div>
             <div class="entry-text">${escapeHtml(entry.text)}</div>
             <div class="entry-meta">
-              <span class="lang-pill">${langMeta(entry).flag} ${langMeta(entry).label}</span>
+              <span class="lang-pill" style="color:${langMeta(entry).color}; border-color:${langMeta(entry).color};">${langMeta(entry).label}</span>
               <span class="tag-pill">${TYPE_LABELS[entry.type]}</span>
               <span class="tag-pill">${fmtDate(entry.createdAt)}</span>
               <span class="tag-pill" style="${entry.memorized ? 'color:var(--sage-dark);border-color:var(--sage-dark);' : 'color:var(--rust);border-color:var(--rust);'}">${entry.memorized ? '✓ 암기' : '미암기'}</span>
@@ -1079,7 +1084,7 @@ function renderWordbook(){
       ${statsLine}
     </div>
     <div class="flashcard" onclick="toggleFlip()">
-      <span class="tag-pill">${langMeta(entry).flag} ${TYPE_LABELS[entry.type]}</span>
+      <span class="tag-pill" style="color:${langMeta(entry).color}; border-color:${langMeta(entry).color};">${langMeta(entry).label} · ${TYPE_LABELS[entry.type]}</span>
       <span class="memorized-pill ${entry.memorized ? 'yes' : 'no'}">${entry.memorized ? '✓ 암기함' : '미암기'}</span>
       ${state.wbFlipped
         ? `<div class="fc-back">${entry.meaning ? escapeHtml(entry.meaning) : '(등록된 뜻이 없어요)'}</div>`
@@ -1162,7 +1167,7 @@ function renderDetail(){
   overlay.innerHTML = `
     <div class="sheet">
       <div class="sheet-header">
-        <span class="tag-pill">${langMeta(entry).flag} ${langMeta(entry).label} · ${TYPE_LABELS[entry.type]} · ${fmtDate(entry.createdAt)}</span>
+        <span class="tag-pill"><span style="color:${langMeta(entry).color}; font-weight:600;">${langMeta(entry).label}</span> · ${TYPE_LABELS[entry.type]} · ${fmtDate(entry.createdAt)}</span>
         <button class="sheet-close" onclick="closeDetail()">✕</button>
       </div>
       <div class="detail-text">${escapeHtml(entry.text)}</div>
