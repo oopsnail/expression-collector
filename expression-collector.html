@@ -250,6 +250,22 @@ input.meaning-input:focus{outline:none; border-bottom-color:var(--sage-dark);}
   font-size:15.5px;
   line-height:1.7;
 }
+.journal-shuffle-row{
+  display:flex;
+  justify-content:flex-end;
+  margin-bottom:10px;
+}
+.shuffle-btn{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:12px;
+  color:var(--ink-soft);
+  background:var(--white);
+  border:1.2px solid var(--line);
+  border-radius:20px;
+  padding:6px 12px;
+  cursor:pointer;
+}
+.shuffle-btn:active{background:var(--paper-dark);}
 .entry-swipe-wrap{
   position:relative;
   overflow:hidden;
@@ -619,7 +635,7 @@ audio{height:36px; max-width:100%;}
 <script>
 // ---------- STATE ----------
 let state = {
-  tab: 'capture',
+  tab: 'journal',
   entries: [],
   loading: true,
   captureType: 'expression',
@@ -745,6 +761,7 @@ async function loadEntries(){
       }catch(e){ /* skip broken key */ }
     }
     results.sort((a,b)=> b.createdAt - a.createdAt);
+    results.forEach(e => { e._rand = Math.random(); });
     state.entries = results;
   }catch(e){
     console.error('load error', e);
@@ -924,6 +941,7 @@ async function handleAddEntry(){
     memorized: false,
     createdAt: Date.now(),
   };
+  entry._rand = Math.random();
   state.entries.unshift(entry);
   await saveEntry(entry);
   state.draftText = '';
@@ -995,6 +1013,11 @@ async function toggleDetailMemorized(id){
   render();
 }
 
+function shuffleJournal(){
+  state.entries.forEach(e => { e._rand = Math.random(); });
+  render();
+}
+
 function openDetail(id){
   state.detailId = id;
   render();
@@ -1028,11 +1051,15 @@ function renderCapture(){
 }
 
 function renderJournal(){
-  const list = state.entries.filter(e => (e.lang||'en') === state.activeLang);
+  const list = state.entries
+    .filter(e => (e.lang||'en') === state.activeLang)
+    .slice()
+    .sort((a,b) => (a._rand ?? 0) - (b._rand ?? 0));
+  const shuffleRow = `<div class="journal-shuffle-row"><button class="shuffle-btn" onclick="shuffleJournal()">🔀 다시 섞기</button></div>`;
   if(list.length === 0){
     return `<div class="journal-empty">아직 채집한 표현이 없어요.<br>‘채집’ 탭에서 첫 표현을 담아보세요 🌱</div>`;
   }
-  return list.map(entry => `
+  return shuffleRow + list.map(entry => `
     <div class="entry-swipe-wrap">
       <div class="entry-swipe-delete" onclick="event.stopPropagation(); handleDeleteEntry('${entry.id}')">
         <span>🗑</span><span>삭제</span>
