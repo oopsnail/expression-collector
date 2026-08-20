@@ -1237,7 +1237,8 @@ function escapeAttr(str){
 function setCaptureType(t){ state.captureType = t; render(); }
 
 function render(){
-  document.getElementById('entryCount').textContent = String(state.entries.length).padStart(3,'0');
+  const laneCount = state.entries.filter(e => (e.lang||'en') === state.activeLang).length;
+  document.getElementById('entryCount').textContent = String(laneCount).padStart(3,'0');
   document.querySelectorAll('#tabBar button').forEach(b=>{
     b.classList.toggle('active', b.dataset.tab === state.tab);
   });
