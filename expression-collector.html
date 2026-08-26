@@ -622,16 +622,21 @@ audio{height:36px; max-width:100%;}
 }
 .note-action-btn.danger:active{background:rgba(166,75,59,0.12); color:var(--rust); border-color:var(--rust);}
 .note-action-btn:active{background:var(--paper-dark);}
-.note-edit-row{display:flex; gap:6px; align-items:center;}
-.note-edit-row input{
-  flex:1;
+.note-edit-row{display:flex; flex-direction:column; gap:6px;}
+.note-edit-row textarea{
+  width:100%;
+  font-family:'IBM Plex Sans KR', sans-serif;
   font-size:15.5px;
+  line-height:1.5;
   border:1.3px solid var(--sage-dark);
   border-radius:2px;
   padding:8px 10px;
   background:var(--white);
+  resize:vertical;
+  white-space:pre-wrap;
 }
-.note-edit-row input:focus{outline:none;}
+.note-edit-row textarea:focus{outline:none;}
+.note-edit-row .note-edit-actions{display:flex; gap:6px;}
 .note-edit-row button{
   padding:8px 12px;
   border:1.3px solid var(--ink);
@@ -647,18 +652,23 @@ audio{height:36px; max-width:100%;}
   color:var(--ink-soft);
   border-color:var(--line);
 }
-.add-note-row{display:flex; gap:8px; margin-top:6px;}
-.add-note-row input{
-  flex:1;
+.add-note-row{display:flex; flex-direction:column; gap:6px; margin-top:6px;}
+.add-note-row textarea{
+  width:100%;
+  font-family:'IBM Plex Sans KR', sans-serif;
   font-size:15.5px;
+  line-height:1.5;
   border:1.3px solid var(--line);
   border-radius:2px;
   padding:9px 10px;
   background:var(--white);
+  resize:vertical;
+  white-space:pre-wrap;
 }
-.add-note-row input:focus{outline:none; border-color:var(--sage-dark);}
+.add-note-row textarea:focus{outline:none; border-color:var(--sage-dark);}
 .add-note-row button{
-  padding:0 16px;
+  align-self:flex-end;
+  padding:8px 16px;
   border:1.3px solid var(--ink);
   background:var(--ink);
   color:var(--white);
@@ -1539,9 +1549,11 @@ function renderDetail(){
           <div class="note-item">
             ${state.editingNoteId === n.id ? `
               <div class="note-edit-row">
-                <input id="editNoteInput-${n.id}" value="${escapeAttr(n.text)}" onkeydown="if(event.key==='Enter') saveEditNote('${entry.id}','${n.id}'); if(event.key==='Escape') cancelEditNote();">
-                <button onclick="saveEditNote('${entry.id}','${n.id}')">저장</button>
-                <button class="ghost" onclick="cancelEditNote()">취소</button>
+                <textarea id="editNoteInput-${n.id}" rows="3" onkeydown="if((event.key==='Enter')&&(event.metaKey||event.ctrlKey)) saveEditNote('${entry.id}','${n.id}'); if(event.key==='Escape') cancelEditNote();">${escapeHtml(n.text)}</textarea>
+                <div class="note-edit-actions">
+                  <button onclick="saveEditNote('${entry.id}','${n.id}')">저장</button>
+                  <button class="ghost" onclick="cancelEditNote()">취소</button>
+                </div>
               </div>
             ` : `
               <div class="note-text-row">
@@ -1556,7 +1568,7 @@ function renderDetail(){
           </div>
         `).join('') || '<div style="font-size:15px;color:var(--ink-soft);">아직 추가된 예문이나 메모가 없어요.</div>'}
         <div class="add-note-row">
-          <input id="noteInput" placeholder="예문, 뉘앙스, 유의어 등을 적어보세요" onkeydown="if(event.key==='Enter') handleAddNote('${entry.id}')">
+          <textarea id="noteInput" rows="2" placeholder="예문, 뉘앙스, 유의어 등을 적어보세요. 긴 문단을 붙여넣어도 줄바꿈이 그대로 저장돼요." onkeydown="if((event.key==='Enter')&&(event.metaKey||event.ctrlKey)) handleAddNote('${entry.id}')"></textarea>
           <button onclick="handleAddNote('${entry.id}')">추가</button>
         </div>
       </div>
