@@ -222,18 +222,21 @@ textarea.main-input.dual::placeholder{
   color:var(--ink-soft);
 }
 .type-chip.active{background:var(--sage-dark); color:var(--white); border-color:var(--sage-dark);}
-input.meaning-input{
+textarea.meaning-input{
   width:100%;
   font-family:'IBM Plex Sans KR', sans-serif;
   font-size:16.5px;
+  line-height:1.5;
   border:none;
   border-bottom:1.5px solid var(--line);
   background:transparent;
   padding:6px 0 8px;
   color:var(--ink);
   margin-bottom:18px;
+  resize:vertical;
+  white-space:pre-wrap;
 }
-input.meaning-input:focus{outline:none; border-bottom-color:var(--sage-dark);}
+textarea.meaning-input:focus{outline:none; border-bottom-color:var(--sage-dark);}
 textarea.example-input{
   width:100%;
   font-family:'IBM Plex Sans KR', sans-serif;
@@ -573,11 +576,15 @@ audio{height:36px; max-width:100%;}
 .section-title::after{content:''; flex:1; height:1px; background:var(--line);}
 .meaning-edit{
   width:100%;
+  font-family:'IBM Plex Sans KR', sans-serif;
   font-size:16.5px;
+  line-height:1.5;
   border:none;
   border-bottom:1.5px solid var(--line);
   background:transparent;
   padding:6px 0;
+  resize:vertical;
+  white-space:pre-wrap;
 }
 .meaning-edit:focus{outline:none; border-bottom-color:var(--sage-dark);}
 
@@ -1306,7 +1313,7 @@ function renderCapture(){
         `).join('')}
       </div>
       <label class="field-label">뜻 (선택)</label>
-      <input id="captureMeaning" class="meaning-input" placeholder="한국어 의미를 적어보세요" value="${escapeAttr(state.draftMeaning)}" oninput="state.draftMeaning=this.value">
+      <textarea id="captureMeaning" class="meaning-input" rows="2" placeholder="한국어 의미를 적어보세요" oninput="state.draftMeaning=this.value">${escapeHtml(state.draftMeaning)}</textarea>
       <label class="field-label">예문 (선택)</label>
       <textarea id="captureExample" class="example-input" rows="2" placeholder="이 표현이 쓰인 문장을 적어보세요. 긴 문단을 붙여넣어도 줄바꿈 그대로 저장돼요." oninput="state.draftExample=this.value">${escapeHtml(state.draftExample)}</textarea>
       <button id="saveBtn" class="save-btn" onclick="handleAddEntry()">채집장에 담기</button>
@@ -1539,8 +1546,8 @@ function renderDetail(){
 
       <div class="section-block">
         <div class="section-title">뜻</div>
-        <input class="meaning-edit" value="${escapeAttr(entry.meaning||'')}" placeholder="한국어 뜻을 적어보세요"
-          onblur="handleMeaningEdit('${entry.id}', this.value)">
+        <textarea class="meaning-edit" rows="2" placeholder="한국어 뜻을 적어보세요"
+          onblur="handleMeaningEdit('${entry.id}', this.value)">${escapeHtml(entry.meaning||'')}</textarea>
       </div>
 
       <div class="section-block">
