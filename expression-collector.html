@@ -210,6 +210,10 @@ textarea.main-input.dual::placeholder{
   font-size:13px;
   letter-spacing:0.02em;
 }
+textarea.autogrow{
+  resize:none;
+  overflow:hidden;
+}
 .type-row{display:flex; gap:8px; margin:16px 0 14px;}
 .type-chip{
   font-family:'IBM Plex Mono', monospace;
@@ -1297,11 +1301,11 @@ function renderCapture(){
   };
   const textInputBlock = state.activeLang === 'ja' ? `
     <div class="dual-input-stack">
-      <textarea id="captureInputKanji" class="main-input dual" rows="2" placeholder="한자 포함" oninput="state.draftTextKanji=this.value">${escapeHtml(state.draftTextKanji)}</textarea>
-      <textarea id="captureInputHiragana" class="main-input dual" rows="2" placeholder="히라가나만" oninput="state.draftTextHiragana=this.value">${escapeHtml(state.draftTextHiragana)}</textarea>
+      <textarea id="captureInputKanji" class="main-input dual autogrow" rows="2" placeholder="한자 포함" oninput="autoGrow(this); state.draftTextKanji=this.value">${escapeHtml(state.draftTextKanji)}</textarea>
+      <textarea id="captureInputHiragana" class="main-input dual autogrow" rows="2" placeholder="히라가나만" oninput="autoGrow(this); state.draftTextHiragana=this.value">${escapeHtml(state.draftTextHiragana)}</textarea>
     </div>
   ` : `
-    <textarea id="captureInput" class="main-input" rows="3" placeholder="${placeholders[state.activeLang]}" oninput="state.draftText=this.value">${escapeHtml(state.draftText)}</textarea>
+    <textarea id="captureInput" class="main-input autogrow" rows="3" placeholder="${placeholders[state.activeLang]}" oninput="autoGrow(this); state.draftText=this.value">${escapeHtml(state.draftText)}</textarea>
   `;
   return `
     <div class="capture-card">
@@ -1313,9 +1317,9 @@ function renderCapture(){
         `).join('')}
       </div>
       <label class="field-label">뜻 (선택)</label>
-      <textarea id="captureMeaning" class="meaning-input" rows="2" placeholder="한국어 의미를 적어보세요" oninput="state.draftMeaning=this.value">${escapeHtml(state.draftMeaning)}</textarea>
+      <textarea id="captureMeaning" class="meaning-input autogrow" rows="2" placeholder="한국어 의미를 적어보세요" oninput="autoGrow(this); state.draftMeaning=this.value">${escapeHtml(state.draftMeaning)}</textarea>
       <label class="field-label">예문 (선택)</label>
-      <textarea id="captureExample" class="example-input" rows="2" placeholder="이 표현이 쓰인 문장을 적어보세요. 긴 문단을 붙여넣어도 줄바꿈 그대로 저장돼요." oninput="state.draftExample=this.value">${escapeHtml(state.draftExample)}</textarea>
+      <textarea id="captureExample" class="example-input autogrow" rows="2" placeholder="이 표현이 쓰인 문장을 적어보세요. 긴 문단을 붙여넣어도 줄바꿈 그대로 저장돼요." oninput="autoGrow(this); state.draftExample=this.value">${escapeHtml(state.draftExample)}</textarea>
       <button id="saveBtn" class="save-btn" onclick="handleAddEntry()">채집장에 담기</button>
     </div>
     <div class="hint-box">
@@ -1519,7 +1523,7 @@ function renderDetail(){
         <button class="sheet-close" onclick="closeDetail()">✕</button>
       </div>
       ${state.editingMainText ? `
-        <textarea id="editMainTextInput" class="main-input" rows="3" style="margin-bottom:8px;">${escapeHtml(entry.text)}</textarea>
+        <textarea id="editMainTextInput" class="main-input autogrow" rows="3" style="margin-bottom:8px;" oninput="autoGrow(this)">${escapeHtml(entry.text)}</textarea>
         <div style="display:flex; gap:8px; margin-bottom:10px;">
           <button onclick="saveMainTextEdit('${entry.id}')" style="padding:8px 16px; border:1.3px solid var(--ink); background:var(--ink); color:var(--white); border-radius:2px; font-size:13.5px; cursor:pointer;">저장</button>
           <button onclick="cancelMainTextEdit()" style="padding:8px 16px; border:1.3px solid var(--line); background:var(--white); color:var(--ink-soft); border-radius:2px; font-size:13.5px; cursor:pointer;">취소</button>
@@ -1546,7 +1550,7 @@ function renderDetail(){
 
       <div class="section-block">
         <div class="section-title">뜻</div>
-        <textarea class="meaning-edit" rows="2" placeholder="한국어 뜻을 적어보세요"
+        <textarea class="meaning-edit autogrow" rows="2" placeholder="한국어 뜻을 적어보세요" oninput="autoGrow(this)"
           onblur="handleMeaningEdit('${entry.id}', this.value)">${escapeHtml(entry.meaning||'')}</textarea>
       </div>
 
@@ -1556,7 +1560,7 @@ function renderDetail(){
           <div class="note-item">
             ${state.editingNoteId === n.id ? `
               <div class="note-edit-row">
-                <textarea id="editNoteInput-${n.id}" rows="3" onkeydown="if((event.key==='Enter')&&(event.metaKey||event.ctrlKey)) saveEditNote('${entry.id}','${n.id}'); if(event.key==='Escape') cancelEditNote();">${escapeHtml(n.text)}</textarea>
+                <textarea id="editNoteInput-${n.id}" class="autogrow" rows="3" oninput="autoGrow(this)" onkeydown="if((event.key==='Enter')&&(event.metaKey||event.ctrlKey)) saveEditNote('${entry.id}','${n.id}'); if(event.key==='Escape') cancelEditNote();">${escapeHtml(n.text)}</textarea>
                 <div class="note-edit-actions">
                   <button onclick="saveEditNote('${entry.id}','${n.id}')">저장</button>
                   <button class="ghost" onclick="cancelEditNote()">취소</button>
@@ -1575,7 +1579,7 @@ function renderDetail(){
           </div>
         `).join('') || '<div style="font-size:15px;color:var(--ink-soft);">아직 추가된 예문이나 메모가 없어요.</div>'}
         <div class="add-note-row">
-          <textarea id="noteInput" rows="2" placeholder="예문, 뉘앙스, 유의어 등을 적어보세요. 긴 문단을 붙여넣어도 줄바꿈이 그대로 저장돼요." onkeydown="if((event.key==='Enter')&&(event.metaKey||event.ctrlKey)) handleAddNote('${entry.id}')"></textarea>
+          <textarea id="noteInput" class="autogrow" rows="2" placeholder="예문, 뉘앙스, 유의어 등을 적어보세요. 긴 문단을 붙여넣어도 줄바꿈이 그대로 저장돼요." oninput="autoGrow(this)" onkeydown="if((event.key==='Enter')&&(event.metaKey||event.ctrlKey)) handleAddNote('${entry.id}')"></textarea>
           <button onclick="handleAddNote('${entry.id}')">추가</button>
         </div>
       </div>
@@ -1590,6 +1594,18 @@ function renderDetail(){
 }
 
 // ---------- ESCAPE HELPERS ----------
+function autoGrow(el){
+  if(!el) return;
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+function initAutoGrow(){
+  document.querySelectorAll('textarea.autogrow').forEach(el=>{
+    el.style.height = 'auto';
+    el.style.height = el.scrollHeight + 'px';
+  });
+}
+
 function escapeHtml(str){
   return String(str||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
@@ -1620,6 +1636,7 @@ function render(){
     main.innerHTML = renderWordbook();
   }
   renderDetail();
+  initAutoGrow();
 }
 
 document.getElementById('tabBar').addEventListener('click', (e)=>{
