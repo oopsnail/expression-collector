@@ -19,6 +19,7 @@
   --rust:#A64B3B;
   --denim:#3F6284;
   --plum:#7C4B68;
+  --hiragana:#B9754A;
   --line:#D9D2BB;
   --white:#FFFDF7;
 }
@@ -192,6 +193,23 @@ textarea.main-input{
   color:var(--ink);
 }
 textarea.main-input:focus{outline:none; border-bottom-color:var(--sage-dark);}
+.dual-input-stack{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  margin-bottom:2px;
+}
+textarea.main-input.dual{
+  font-size:18px;
+  padding:8px 0 8px;
+}
+textarea.main-input.dual::placeholder{
+  color:var(--ink-soft);
+  opacity:0.55;
+  font-family:'IBM Plex Sans KR', sans-serif;
+  font-size:13px;
+  letter-spacing:0.02em;
+}
 .type-row{display:flex; gap:8px; margin:16px 0 14px;}
 .type-chip{
   font-family:'IBM Plex Mono', monospace;
@@ -216,6 +234,21 @@ input.meaning-input{
   margin-bottom:18px;
 }
 input.meaning-input:focus{outline:none; border-bottom-color:var(--sage-dark);}
+textarea.example-input{
+  width:100%;
+  font-family:'IBM Plex Sans KR', sans-serif;
+  font-size:15px;
+  line-height:1.5;
+  border:1.3px solid var(--line);
+  border-radius:2px;
+  background:var(--white);
+  padding:10px 11px;
+  color:var(--ink);
+  margin-bottom:18px;
+  resize:vertical;
+  white-space:pre-wrap;
+}
+textarea.example-input:focus{outline:none; border-color:var(--sage-dark);}
 .save-btn{
   width:100%;
   padding:13px 0;
@@ -250,10 +283,30 @@ input.meaning-input:focus{outline:none; border-bottom-color:var(--sage-dark);}
   font-size:15.5px;
   line-height:1.7;
 }
+.journal-search-row{
+  margin-bottom:10px;
+}
+.journal-search-input{
+  width:100%;
+  font-family:'IBM Plex Sans KR', sans-serif;
+  font-size:14.5px;
+  padding:9px 12px;
+  border:1.3px solid var(--line);
+  border-radius:20px;
+  background:var(--white);
+  color:var(--ink);
+}
+.journal-search-input:focus{outline:none; border-color:var(--sage-dark);}
 .journal-shuffle-row{
   display:flex;
-  justify-content:flex-end;
+  align-items:center;
+  justify-content:space-between;
   margin-bottom:10px;
+}
+.journal-count-label{
+  font-family:'IBM Plex Mono', monospace;
+  font-size:12px;
+  color:var(--ink-soft);
 }
 .shuffle-btn{
   font-family:'IBM Plex Mono', monospace;
@@ -266,6 +319,20 @@ input.meaning-input:focus{outline:none; border-bottom-color:var(--sage-dark);}
   cursor:pointer;
 }
 .shuffle-btn:active{background:var(--paper-dark);}
+.load-more-btn{
+  display:block;
+  width:100%;
+  margin-top:6px;
+  padding:12px 0;
+  font-family:'IBM Plex Mono', monospace;
+  font-size:13px;
+  color:var(--ink-soft);
+  background:var(--white);
+  border:1.3px dashed var(--line);
+  border-radius:4px;
+  cursor:pointer;
+}
+.load-more-btn:active{background:var(--paper-dark);}
 .entry-swipe-wrap{
   position:relative;
   overflow:hidden;
@@ -302,6 +369,7 @@ input.meaning-input:focus{outline:none; border-bottom-color:var(--sage-dark);}
 }
 .entry-card-top{display:flex; justify-content:space-between; align-items:flex-start; gap:10px;}
 .entry-text{
+  white-space:pre-wrap;
   font-family:'Fraunces', serif;
   font-size:18.5px;
   font-weight:500;
@@ -322,6 +390,7 @@ input.meaning-input:focus{outline:none; border-bottom-color:var(--sage-dark);}
   text-transform:uppercase;
 }
 .entry-meaning{
+  white-space:pre-wrap;
   font-size:15px;
   color:var(--ink-soft);
   margin-top:6px;
@@ -363,12 +432,14 @@ input.meaning-input:focus{outline:none; border-bottom-color:var(--sage-dark);}
 }
 .flashcard .tag-pill{position:absolute; top:12px; left:12px;}
 .fc-front{
+  white-space:pre-wrap;
   font-family:'Fraunces', serif;
   font-size:24.5px;
   font-weight:600;
   line-height:1.4;
 }
 .fc-back{
+  white-space:pre-wrap;
   font-size:17px;
   color:var(--sage-dark);
   font-weight:600;
@@ -461,6 +532,7 @@ input.meaning-input:focus{outline:none; border-bottom-color:var(--sage-dark);}
   background:none; border:none; font-size:21.5px; color:var(--ink-soft); cursor:pointer; padding:2px 6px;
 }
 .detail-text{
+  white-space:pre-wrap;
   font-family:'Fraunces', serif;
   font-size:25.5px;
   font-weight:600;
@@ -525,6 +597,55 @@ audio{height:36px; max-width:100%;}
   color:var(--ink-soft);
   margin-top:4px;
   display:block;
+}
+.note-text-row{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+}
+.note-text{flex:1; white-space:pre-wrap;}
+.note-actions{
+  display:flex;
+  gap:4px;
+  flex-shrink:0;
+}
+.note-action-btn{
+  width:26px; height:26px;
+  border:1px solid var(--line);
+  border-radius:50%;
+  background:var(--white);
+  font-size:12px;
+  cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  color:var(--ink-soft);
+}
+.note-action-btn.danger:active{background:rgba(166,75,59,0.12); color:var(--rust); border-color:var(--rust);}
+.note-action-btn:active{background:var(--paper-dark);}
+.note-edit-row{display:flex; gap:6px; align-items:center;}
+.note-edit-row input{
+  flex:1;
+  font-size:15.5px;
+  border:1.3px solid var(--sage-dark);
+  border-radius:2px;
+  padding:8px 10px;
+  background:var(--white);
+}
+.note-edit-row input:focus{outline:none;}
+.note-edit-row button{
+  padding:8px 12px;
+  border:1.3px solid var(--ink);
+  background:var(--ink);
+  color:var(--white);
+  border-radius:2px;
+  font-size:13.5px;
+  cursor:pointer;
+  flex-shrink:0;
+}
+.note-edit-row button.ghost{
+  background:var(--white);
+  color:var(--ink-soft);
+  border-color:var(--line);
 }
 .add-note-row{display:flex; gap:8px; margin-top:6px;}
 .add-note-row input{
@@ -641,13 +762,21 @@ let state = {
   captureType: 'expression',
   activeLang: 'en',
   draftText: '',
+  draftTextKanji: '',
+  draftTextHiragana: '',
   draftMeaning: '',
+  draftExample: '',
   wbIndex: 0,
   wbFlipped: false,
   wbFilter: 'all',
   wbStatusFilter: 'all',
+  journalSearch: '',
+  journalVisibleCount: 30,
+  journalPageSize: 30,
   detailId: null,
   isRecording: false,
+  editingNoteId: null,
+  editingMainText: false,
 };
 let mediaRecorder = null;
 let recChunks = [];
@@ -661,6 +790,11 @@ const LANG_META = {
   it: { label: '이탈리아어', color: 'var(--plum)', code: 'it-IT' },
 };
 function langMeta(entry){ return LANG_META[entry.lang] || LANG_META.en; }
+const SCRIPT_LABELS = { kanji: '한자 포함', hiragana: '히라가나만' };
+function scriptBadge(entry){
+  if(entry.lang !== 'ja' || !entry.script) return '';
+  return SCRIPT_LABELS[entry.script] || '';
+}
 
 // ---------- STORAGE BACKEND (Claude artifact storage, with localStorage fallback) ----------
 let storageBackend = null; // 'claude' | 'local' | 'memory'
@@ -760,6 +894,10 @@ async function loadEntries(){
         if(r && r.value) results.push(JSON.parse(r.value));
       }catch(e){ /* skip broken key */ }
     }
+    results.forEach(e => {
+      if(e.lang === 'ja_kanji'){ e.lang = 'ja'; e.script = 'kanji'; }
+      else if(e.lang === 'ja_hiragana'){ e.lang = 'ja'; e.script = 'hiragana'; }
+    });
     results.sort((a,b)=> b.createdAt - a.createdAt);
     results.forEach(e => { e._rand = Math.random(); });
     state.entries = results;
@@ -921,8 +1059,12 @@ function stopRecording(){
 
 // ---------- ACTIONS ----------
 async function handleAddEntry(){
-  const text = state.draftText.trim();
-  if(!text) return;
+  const isJa = state.activeLang === 'ja';
+  const kanjiText = isJa ? state.draftTextKanji.trim() : '';
+  const hiraganaText = isJa ? state.draftTextHiragana.trim() : '';
+  const plainText = !isJa ? state.draftText.trim() : '';
+
+  if(isJa ? (!kanjiText && !hiraganaText) : !plainText) return;
 
   // Close the mobile keyboard first — triggering effects while it's still
   // animating shut can cause them to be skipped or clipped on some mobile browsers.
@@ -930,27 +1072,49 @@ async function handleAddEntry(){
     document.activeElement.blur();
   }
 
-  const entry = {
-    id: uid(),
-    text,
-    type: state.captureType,
-    lang: state.activeLang,
-    meaning: state.draftMeaning.trim(),
-    notes: [],
-    recording: null,
-    memorized: false,
-    createdAt: Date.now(),
-  };
-  entry._rand = Math.random();
-  state.entries.unshift(entry);
-  await saveEntry(entry);
+  const exampleText = state.draftExample.trim();
+  const sharedMeaning = state.draftMeaning.trim();
+  const makeNotes = () => exampleText ? [{ id: uid(), text: exampleText, createdAt: Date.now() }] : [];
+
+  const newEntries = [];
+  if(isJa){
+    if(kanjiText){
+      newEntries.push({
+        id: uid(), text: kanjiText, type: state.captureType, lang: 'ja', script: 'kanji',
+        meaning: sharedMeaning, notes: makeNotes(), recording: null, memorized: false, createdAt: Date.now(),
+      });
+    }
+    if(hiraganaText){
+      newEntries.push({
+        id: uid(), text: hiraganaText, type: state.captureType, lang: 'ja', script: 'hiragana',
+        meaning: sharedMeaning, notes: makeNotes(), recording: null, memorized: false, createdAt: Date.now(),
+      });
+    }
+  } else {
+    newEntries.push({
+      id: uid(), text: plainText, type: state.captureType, lang: state.activeLang, script: null,
+      meaning: sharedMeaning, notes: makeNotes(), recording: null, memorized: false, createdAt: Date.now(),
+    });
+  }
+
+  for(const entry of newEntries){
+    entry._rand = Math.random();
+    state.entries.unshift(entry);
+    await saveEntry(entry);
+  }
+
   state.draftText = '';
+  state.draftTextKanji = '';
+  state.draftTextHiragana = '';
   state.draftMeaning = '';
+  state.draftExample = '';
   render();
 
   const runEffects = () => {
-    const preview = text.length > 26 ? text.slice(0, 26) + '…' : text;
-    showToast(`🌱 “${preview}” 채집 완료!`);
+    const previewSource = newEntries[0].text;
+    const preview = previewSource.length > 26 ? previewSource.slice(0, 26) + '…' : previewSource;
+    const suffix = newEntries.length > 1 ? ` 외 ${newEntries.length - 1}개` : '';
+    showToast(`🌱 “${preview}”${suffix} 채집 완료!`);
 
     const btn = document.getElementById('saveBtn');
     if(btn){
@@ -998,11 +1162,64 @@ async function handleAddNote(id){
   render();
 }
 
+function startEditNote(noteId){
+  state.editingNoteId = noteId;
+  render();
+}
+function cancelEditNote(){
+  state.editingNoteId = null;
+  render();
+}
+async function saveEditNote(entryId, noteId){
+  const input = document.getElementById('editNoteInput-' + noteId);
+  if(!input) return;
+  const val = input.value.trim();
+  if(!val) return;
+  const entry = state.entries.find(e=>e.id === entryId);
+  if(!entry) return;
+  const note = (entry.notes||[]).find(n=>n.id === noteId);
+  if(!note) return;
+  note.text = val;
+  note.editedAt = Date.now();
+  await saveEntry(entry);
+  state.editingNoteId = null;
+  render();
+}
+async function handleDeleteNote(entryId, noteId){
+  if(!confirm('이 예문/메모를 삭제할까요?')) return;
+  const entry = state.entries.find(e=>e.id === entryId);
+  if(!entry) return;
+  entry.notes = (entry.notes||[]).filter(n=>n.id !== noteId);
+  await saveEntry(entry);
+  render();
+}
+
 async function handleMeaningEdit(id, value){
   const entry = state.entries.find(e=>e.id === id);
   if(!entry) return;
   entry.meaning = value;
   await saveEntry(entry);
+}
+
+function startEditMainText(){
+  state.editingMainText = true;
+  render();
+}
+function cancelMainTextEdit(){
+  state.editingMainText = false;
+  render();
+}
+async function saveMainTextEdit(id){
+  const input = document.getElementById('editMainTextInput');
+  if(!input) return;
+  const val = input.value.trim();
+  if(!val) return;
+  const entry = state.entries.find(e=>e.id === id);
+  if(!entry) return;
+  entry.text = val;
+  await saveEntry(entry);
+  state.editingMainText = false;
+  render();
 }
 
 async function toggleDetailMemorized(id){
@@ -1015,26 +1232,64 @@ async function toggleDetailMemorized(id){
 
 function shuffleJournal(){
   state.entries.forEach(e => { e._rand = Math.random(); });
+  state.journalVisibleCount = state.journalPageSize;
+  render();
+}
+function setJournalSearch(v){
+  state.journalSearch = v;
+  state.journalVisibleCount = state.journalPageSize;
+  const el0 = document.getElementById('journalSearchInput');
+  const wasFocused = el0 === document.activeElement;
+  const selStart = wasFocused ? el0.selectionStart : null;
+  render();
+  if(wasFocused){
+    const el = document.getElementById('journalSearchInput');
+    if(el){
+      el.focus();
+      if(selStart !== null) el.setSelectionRange(selStart, selStart);
+    }
+  }
+}
+function loadMoreJournal(){
+  state.journalVisibleCount += state.journalPageSize;
   render();
 }
 
+
 function openDetail(id){
   state.detailId = id;
+  state.editingNoteId = null;
+  state.editingMainText = false;
   render();
 }
 function closeDetail(){
   state.detailId = null;
   state.isRecording = false;
+  state.editingNoteId = null;
+  state.editingMainText = false;
   render();
 }
 
 // ---------- RENDER: TABS ----------
 function renderCapture(){
-  const placeholders = { en: "e.g. It's not rocket science.", ja: '例：お疲れ様です', es: 'p.ej. No hay de qué', zh: '例：马马虎虎', it: 'p.es. Non c\'è di che' };
+  const placeholders = {
+    en: "e.g. It's not rocket science.",
+    es: 'p.ej. No hay de qué',
+    zh: '例：马马虎虎',
+    it: 'p.es. Non c\'è di che'
+  };
+  const textInputBlock = state.activeLang === 'ja' ? `
+    <div class="dual-input-stack">
+      <textarea id="captureInputKanji" class="main-input dual" rows="2" placeholder="한자 포함" oninput="state.draftTextKanji=this.value">${escapeHtml(state.draftTextKanji)}</textarea>
+      <textarea id="captureInputHiragana" class="main-input dual" rows="2" placeholder="히라가나만" oninput="state.draftTextHiragana=this.value">${escapeHtml(state.draftTextHiragana)}</textarea>
+    </div>
+  ` : `
+    <textarea id="captureInput" class="main-input" rows="3" placeholder="${placeholders[state.activeLang]}" oninput="state.draftText=this.value">${escapeHtml(state.draftText)}</textarea>
+  `;
   return `
     <div class="capture-card">
       <label class="field-label" style="color:${LANG_META[state.activeLang].color};">${LANG_META[state.activeLang].label} 표현 채집 중</label>
-      <textarea id="captureInput" class="main-input" rows="3" placeholder="${placeholders[state.activeLang]}" oninput="state.draftText=this.value">${escapeHtml(state.draftText)}</textarea>
+      ${textInputBlock}
       <div class="type-row">
         ${['word','expression','sentence'].map(t=>`
           <button class="type-chip ${state.captureType===t?'active':''}" onclick="setCaptureType('${t}')">${TYPE_LABELS[t]}</button>
@@ -1042,6 +1297,8 @@ function renderCapture(){
       </div>
       <label class="field-label">뜻 (선택)</label>
       <input id="captureMeaning" class="meaning-input" placeholder="한국어 의미를 적어보세요" value="${escapeAttr(state.draftMeaning)}" oninput="state.draftMeaning=this.value">
+      <label class="field-label">예문 (선택)</label>
+      <textarea id="captureExample" class="example-input" rows="2" placeholder="이 표현이 쓰인 문장을 적어보세요. 긴 문단을 붙여넣어도 줄바꿈 그대로 저장돼요." oninput="state.draftExample=this.value">${escapeHtml(state.draftExample)}</textarea>
       <button id="saveBtn" class="save-btn" onclick="handleAddEntry()">채집장에 담기</button>
     </div>
     <div class="hint-box">
@@ -1051,15 +1308,46 @@ function renderCapture(){
 }
 
 function renderJournal(){
-  const list = state.entries
+  const q = state.journalSearch.trim().toLowerCase();
+  let list = state.entries
     .filter(e => (e.lang||'en') === state.activeLang)
     .slice()
     .sort((a,b) => (a._rand ?? 0) - (b._rand ?? 0));
-  const shuffleRow = `<div class="journal-shuffle-row"><button class="shuffle-btn" onclick="shuffleJournal()">🔀 다시 섞기</button></div>`;
-  if(list.length === 0){
-    return `<div class="journal-empty">아직 채집한 표현이 없어요.<br>‘채집’ 탭에서 첫 표현을 담아보세요 🌱</div>`;
+
+  if(q){
+    list = list.filter(e =>
+      (e.text||'').toLowerCase().includes(q) ||
+      (e.meaning||'').toLowerCase().includes(q)
+    );
   }
-  return shuffleRow + list.map(entry => `
+
+  const total = list.length;
+  const visible = list.slice(0, state.journalVisibleCount);
+
+  const toolbarRow = `
+    <div class="journal-search-row">
+      <input
+        id="journalSearchInput"
+        class="journal-search-input"
+        placeholder="🔍 표현이나 뜻으로 찾기"
+        value="${escapeAttr(state.journalSearch)}"
+        oninput="setJournalSearch(this.value)"
+      >
+    </div>
+    <div class="journal-shuffle-row">
+      <span class="journal-count-label">${total}개${q ? ' 검색됨' : ''}</span>
+      <button class="shuffle-btn" onclick="shuffleJournal()">🔀 다시 섞기</button>
+    </div>
+  `;
+
+  if(total === 0){
+    const emptyMsg = q
+      ? `<div class="journal-empty">"${escapeHtml(state.journalSearch)}"에 맞는 표현을 못 찾았어요.</div>`
+      : `<div class="journal-empty">아직 채집한 표현이 없어요.<br>‘채집’ 탭에서 첫 표현을 담아보세요 🌱</div>`;
+    return toolbarRow + emptyMsg;
+  }
+
+  const cardsHtml = visible.map(entry => `
     <div class="entry-swipe-wrap">
       <div class="entry-swipe-delete" onclick="event.stopPropagation(); handleDeleteEntry('${entry.id}')">
         <span>🗑</span><span>삭제</span>
@@ -1071,6 +1359,7 @@ function renderJournal(){
             <div class="entry-meta">
               <span class="lang-pill" style="color:${langMeta(entry).color}; border-color:${langMeta(entry).color};">${langMeta(entry).label}</span>
               <span class="tag-pill">${TYPE_LABELS[entry.type]}</span>
+              ${scriptBadge(entry) ? `<span class="tag-pill">${scriptBadge(entry)}</span>` : ''}
               <span class="tag-pill">${fmtDate(entry.createdAt)}</span>
               <span class="tag-pill" style="${entry.memorized ? 'color:var(--sage-dark);border-color:var(--sage-dark);' : 'color:var(--rust);border-color:var(--rust);'}">${entry.memorized ? '✓ 암기' : '미암기'}</span>
             </div>
@@ -1081,6 +1370,12 @@ function renderJournal(){
       </div>
     </div>
   `).join('');
+
+  const loadMoreHtml = total > visible.length
+    ? `<button class="load-more-btn" onclick="loadMoreJournal()">더 보기 (${total - visible.length}개 남음)</button>`
+    : '';
+
+  return toolbarRow + cardsHtml + loadMoreHtml;
 }
 
 function getWordbookList(){
@@ -1114,7 +1409,7 @@ function renderWordbook(){
       ${statsLine}
     </div>
     <div class="flashcard">
-      <span class="tag-pill" style="color:${langMeta(entry).color}; border-color:${langMeta(entry).color};">${langMeta(entry).label} · ${TYPE_LABELS[entry.type]}</span>
+      <span class="tag-pill" style="color:${langMeta(entry).color}; border-color:${langMeta(entry).color};">${langMeta(entry).label} · ${TYPE_LABELS[entry.type]}${scriptBadge(entry) ? ' · ' + scriptBadge(entry) : ''}</span>
       <span class="memorized-pill ${entry.memorized ? 'yes' : 'no'}">${entry.memorized ? '✓ 암기함' : '미암기'}</span>
       ${state.wbFlipped
         ? `<div class="fc-back">${entry.meaning ? escapeHtml(entry.meaning) : '(등록된 뜻이 없어요)'}</div>`
@@ -1157,6 +1452,7 @@ function wbStatusSelect(){
     </select>
   `;
 }
+
 function setWbFilter(v){ state.wbFilter = v; state.wbIndex = 0; state.wbFlipped = false; render(); }
 function setWbStatusFilter(v){ state.wbStatusFilter = v; state.wbIndex = 0; state.wbFlipped = false; render(); }
 function toggleFlip(){ state.wbFlipped = !state.wbFlipped; render(); }
@@ -1202,10 +1498,16 @@ function renderDetail(){
   overlay.innerHTML = `
     <div class="sheet">
       <div class="sheet-header">
-        <span class="tag-pill"><span style="color:${langMeta(entry).color}; font-weight:600;">${langMeta(entry).label}</span> · ${TYPE_LABELS[entry.type]} · ${fmtDate(entry.createdAt)}</span>
+        <span class="tag-pill"><span style="color:${langMeta(entry).color}; font-weight:600;">${langMeta(entry).label}</span> · ${TYPE_LABELS[entry.type]}${scriptBadge(entry) ? ' · ' + scriptBadge(entry) : ''} · ${fmtDate(entry.createdAt)}</span>
         <button class="sheet-close" onclick="closeDetail()">✕</button>
       </div>
-      <div class="detail-text">${escapeHtml(entry.text)}</div>
+      ${state.editingMainText ? `
+        <textarea id="editMainTextInput" class="main-input" rows="3" style="margin-bottom:8px;">${escapeHtml(entry.text)}</textarea>
+        <div style="display:flex; gap:8px; margin-bottom:10px;">
+          <button onclick="saveMainTextEdit('${entry.id}')" style="padding:8px 16px; border:1.3px solid var(--ink); background:var(--ink); color:var(--white); border-radius:2px; font-size:13.5px; cursor:pointer;">저장</button>
+          <button onclick="cancelMainTextEdit()" style="padding:8px 16px; border:1.3px solid var(--line); background:var(--white); color:var(--ink-soft); border-radius:2px; font-size:13.5px; cursor:pointer;">취소</button>
+        </div>
+      ` : `<div class="detail-text">${escapeHtml(entry.text)}</div>`}
 
       <div class="rings-large">${ringsSVG(stage, 54)}</div>
       <div class="stage-label">${stageLabels[stage-1]}</div>
@@ -1235,8 +1537,22 @@ function renderDetail(){
         <div class="section-title">살 붙이기 · 예문 &amp; 메모</div>
         ${(entry.notes||[]).map(n => `
           <div class="note-item">
-            ${escapeHtml(n.text)}
-            <span class="note-date">${fmtDate(n.createdAt)}</span>
+            ${state.editingNoteId === n.id ? `
+              <div class="note-edit-row">
+                <input id="editNoteInput-${n.id}" value="${escapeAttr(n.text)}" onkeydown="if(event.key==='Enter') saveEditNote('${entry.id}','${n.id}'); if(event.key==='Escape') cancelEditNote();">
+                <button onclick="saveEditNote('${entry.id}','${n.id}')">저장</button>
+                <button class="ghost" onclick="cancelEditNote()">취소</button>
+              </div>
+            ` : `
+              <div class="note-text-row">
+                <span class="note-text">${escapeHtml(n.text)}</span>
+                <div class="note-actions">
+                  <button class="note-action-btn" onclick="startEditNote('${n.id}')" title="수정">✎</button>
+                  <button class="note-action-btn danger" onclick="handleDeleteNote('${entry.id}','${n.id}')" title="삭제">🗑</button>
+                </div>
+              </div>
+              <span class="note-date">${fmtDate(n.createdAt)}${n.editedAt ? ' · 수정됨' : ''}</span>
+            `}
           </div>
         `).join('') || '<div style="font-size:15px;color:var(--ink-soft);">아직 추가된 예문이나 메모가 없어요.</div>'}
         <div class="add-note-row">
@@ -1246,6 +1562,8 @@ function renderDetail(){
       </div>
 
       <div class="danger-zone">
+        <button class="delete-link" style="color:var(--ink-soft);" onclick="startEditMainText()">✎ 수정하기</button>
+        <span style="margin:0 10px; color:var(--line);">|</span>
         <button class="delete-link" onclick="handleDeleteEntry('${entry.id}')">이 표현 삭제하기</button>
       </div>
     </div>
@@ -1299,6 +1617,8 @@ document.getElementById('langTabs').addEventListener('click', (e)=>{
   state.activeLang = btn.dataset.lang;
   state.wbIndex = 0;
   state.wbFlipped = false;
+  state.journalSearch = '';
+  state.journalVisibleCount = state.journalPageSize;
   render();
 });
 
